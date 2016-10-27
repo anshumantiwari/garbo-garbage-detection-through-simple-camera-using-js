@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+<script type="text/javascript" src="js/jquery-1.11.3.min.js"></script>>
+<script type="text/javascript" src="js/paper-full.min.js"></script>
+    <script type="text/javascript" src="js/colorspaces.min.js"></script>
+    <script type="text/javascript" src="js/color-thief.min.js"></script>
+
+    <script type="text/javascript">
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+</script>
+<script type="text/paperscript" canvas="myCanvas">
+ var multi=64*64;
+ var raster = new Raster('garbo');
+ var colorThief = new ColorThief();
+ var pal=[];
+ var im= new Image;
+ var brown=[];
+ var app=$('#garbo').attr('src');
+ im.src=app;
+pal=colorThief.getPalette(im, 5);
+raster.visible = false;
+
+// The size of our grid cells:
+var gridSize = 12;
+
+// Space the cells by 120%:
+var spacing = 1.2;
+
+var distance='';
+var min=0.0;
+var max=0.0;
+var count=0;
+var w=0;
+// As the web is asynchronous, we need to wait for the raster to load
+// before we can perform any operation on its pixels.
+raster.on('load', function() {
+	// Since the example image we're using is much too large,
+	// and therefore has way too many pixels, lets downsize it to
+	// 40 pixels wide and 30 pixels high:
+	raster.size = new Size(64,64);
+   var i=0;
+	for (var y = 0; y < raster.height; y++) {
+		for(var x = 0; x < raster.width; x++) {
+			// Get the color of the pixel:
+			var color = raster.getPixel(x, y);
+
+
+			// Create a circle shaped path:
+			var path = new Path.Circle({
+				center: new Point(x, y) * gridSize,
+				radius: gridSize / 2 / spacing
+			});
+
+			// Set the fill color of the path to the color
+			// of the pixel:
+			var red= color['red'];
+			var green= color['green'];
+			var blue = color['blue'];
+
+             path.fillColor = color;
+
+          var momo=$.colorspaces.make_color('sRGB', [red, green, blue]).as('hex');
+          var colorz=hexToRgb(momo);
+          var ko=0;
+          distance=0;
+          for(var mx=0;mx<pal.length;mx++){
+          brown=pal[mx];
+          ko=Math.sqrt(Math.pow((colorz.r-brown[0]),2)+Math.pow((colorz.g-brown[1]),2)+Math.pow((colorz.b-brown[2]),2));
+          ko=ko/Math.pow(10,mx);
+          distance+=ko;
+          if(w!=1){
+          $('#colors').prepend('<a style="width:54px; height:56px; padding:4px 6px;border-radius:50%;border: 1px solid #333; background:'+'rgb('+brown[0]+','+brown[1]+','+brown[2]+');"> </a>');
+          }
+
+          }
+          w=1;
+          if(i==0){
+          min=distance;
+          max=distance;
+          }
+          if(distance<min){
+          min=distance;
+          }
+          if(distance>max){
+          max=distance;
+          }
+          if(distance<=100){
+          count++;
+          }
+          $('#colors').append('<li>Red: '+colorz.r+' Green: '+colorz.g+' Blue: '+colorz.b+'<b> . Distance is:'+distance+' </b><br><a style="width:54px; height:56px; padding:4px 6px;border-radius:50%;border: 1px solid #333; background:'+momo+';"> </a></li>');
+          i++;
+		}
+	}
+      var perc=(count/multi)*100;
+      if(perc<90){
+      console.log('Kooda Hai!');
+      }
+
+	$('#colors').prepend(min+' is min  and max is '+max);
+	$('#colors').prepend( perc + '%<br>');
+
+	// Move the active layer to the center of the view, so all
+	// the created paths in it appear centered.
+	project.activeLayer.position = view.center;
+});
+
+// Move the active layer to the center of the view:
+project.activeLayer.position = view.center;
+
+</script>
+</head>
+<body>
+<img id="garbo" src="images/garb_12.jpg" style="width:800px;height:600px;"/>
+
+<canvas style="width:800px;height:600px;" id="myCanvas" resize></canvas>
+<ul id="blowjob">
+
+</ul>
+<ul id="colors">
+
+</ul>
+</body>
+</html>
